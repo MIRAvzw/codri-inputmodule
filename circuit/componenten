@@ -1,0 +1,14 @@
+D1 en D2 (2)    Zenerdiode, 3.6 V, 500 mW
+                1N5227B
+R1 en R2 (2)    Weerstand, 68 Ω, 1/4 W, +/- 5% tolerance
+R3              Weerstand, 2.2 kΩ, 1/4 W, +/- 5% tolerance
+X1              USB A connector, male
+C1              Condensator, keramisch, 100 nF
+C2              Condensator, electrolitisch, 100 µF
+S1              Drukschakelaar, 6mm
+                B3F-10XX
+D3-D11 (9)      Diode, 40.0 mA forward (maximum van 1 poort), 5 V reverse
+                1N4148
+IC1             ATTINY45-20P
+JP1             Jumper headers, unboxed, 2x7
+JP2             Jumper headers, boxed, 2x3
