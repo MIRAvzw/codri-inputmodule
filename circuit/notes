@@ -1,0 +1,20 @@
+3.6 zener's: werken beter dan 3.3v, ook best ggeen 1w (500mw)
+
+C1 en C2 dienen om ruis van de VCC lijn te verwijderen. Vaak wordt daartoe, zoals hier, een combinatie van 2 verschillende waarden gebruikt om zowel lage als hoge frequenties weg te filteren.
+
+IC1 is gekozen omdat het dit project perfect past, alsook het een ingebouwde oscillator kent dat perfect de USB1.1 vereisten matcht. Ook is het geheugen net groot genoeg om de V-USB code te herbergen.
+
+S1-S4 zijn de schakelaars, en zullen gebruikt worden om de active-low poorten (met interne pullup) te activeren.
+
+R1 en R2 dienen ertoe om de maximale stroom te limiteren. De poorten van de AtTiny (zelf 50 ohm) kunnen immers maar 40 mA aan, 50 + 68 ohm = 118 ohm, wat bij 5v zorgt voor een maximale stromo van 42 mA
+
+
+Oscillator calibratie van de easylogger:        http://forums.obdev.at/viewtopic.php?f=8&t=3931
+<< Designs based on the RC oscillator need calibration. EasyLogger starting with version 2008-02-28 includes code for auto-calibration based on the USB frame clock. This code is now also included in directory libs-device of the driver package. >>
+Identificiatie nut componenten + hints:         http://gathering.tweakers.net/forum/list_messages/1452553
+Hardware info:                                  http://vusb.wikidot.com/hardware
+Componenten uitgelegd op												http://frank.circleofcurrent.com/usnoobie/assembly.php
+
+
+
+--------------------------------------------------------------------------------
