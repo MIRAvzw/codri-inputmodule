@@ -1,43 +1,19 @@
-# Name: Makefile
-# Project: EasyLogger
-# Author: Christian Starkjohann
-# Creation Date: 2007-06-23
-# Tabsize: 4
-# Copyright: (c) 2007 by OBJECTIVE DEVELOPMENT Software GmbH
-# License: GPLv2.
-# This Revision: $Id: Makefile 362 2007-06-25 14:38:21Z cs $
+#
+# Configuration
+#
 
+# Device characteristics
 DEVICE=attiny45
-AVRDUDE = avrdude -c stk500v2 -P avrdoper -p $(DEVICE)
-# The two lines above are for "avrdude" and the STK500 programmer connected
-# to an USB to serial converter to a Mac running Mac OS X.
-# Choose your favorite programmer and interface.
+DEVICE_RAM=256
+DEVICE_FLASH=4096
 
+# Define which programmer to use
+AVRDUDE = avrdude -c avrispv2 -P /dev/ttyACM0 -p $(DEVICE)
+
+# How do we need to compile the project?
+# NOTE: DO NOT compile the final project with debugging symbols
+#       Any debug output will distort the timings so that the specs can't be met
 COMPILE = avr-gcc -Wall -Os -Iusbdrv -I. -mmcu=$(DEVICE) -DF_CPU=16500000 -DDEBUG_LEVEL=0
-# NEVER compile the final product with debugging! Any debug output will
-# distort timing so that the specs can't be met.
-
-OBJECTS = usbdrv/usbdrv.o usbdrv/usbdrvasm.o usbdrv/oddebug.o main.o
-
-# symbolic targets:
-all:	main.hex
-
-.c.o:
-	$(COMPILE) -c $< -o $@
-
-.S.o:
-	$(COMPILE) -x assembler-with-cpp -c $< -o $@
-# "-x assembler-with-cpp" should not be necessary since this is the default
-# file type for the .S (with capital S) extension. However, upper case
-# characters are not always preserved on Windows. To ensure WinAVR
-# compatibility define the file type manually.
-
-.c.s:
-	$(COMPILE) -S $< -o $@
-
-flash:	all
-	$(AVRDUDE) -U flash:w:main.hex:i
-
 
 # Fuse high byte:
 # 0xdd = 1 1 0 1   1 1 0 1
@@ -48,7 +24,8 @@ flash:	all
 #        | | +---------------- SPIEN (enable serial programming -> enabled)
 #        | +------------------ DWEN (debug wire enable)
 #        +-------------------- RSTDISBL (disable external reset -> enabled)
-#
+FUSE_HIGH=0xdd
+
 # Fuse low byte:
 # 0xe1 = 1 1 1 0   0 0 0 1
 #        ^ ^ \+/   \--+--/
@@ -56,29 +33,54 @@ flash:	all
 #        | |  +--------------- SUT 1..0 (BOD enabled, fast rising power)
 #        | +------------------ CKOUT (clock output on CKOUT pin -> disabled)
 #        +-------------------- CKDIV8 (divide clock by 8 -> don't divide)
+FUSE_LOW=0xe1
+
+
+#
+# Sybmolic targets
+#
+
+all:	main.hex
+
+.c.o:
+	$(COMPILE) -c $< -o $@
+
+.S.o:
+	$(COMPILE) -c $< -o $@
+
+.c.s:
+	$(COMPILE) -S $< -o $@
+
+flash:	all
+	$(AVRDUDE) -U flash:w:main.hex:i
+
 fuse:
-	$(AVRDUDE) -U hfuse:w:0xdd:m -U lfuse:w:0xe1:m
+	$(AVRDUDE) -U hfuse:w:$(FUSE_HIGH):m -U lfuse:w:$(FUSE_LOW):m
 
 readcal:
 	$(AVRDUDE) -U calibration:r:/dev/stdout:i | head -1
 
-
 clean:
-	rm -f main.hex main.lst main.obj main.cof main.list main.map main.eep.hex main.bin *.o usbdrv/*.o main.s usbdrv/oddebug.s usbdrv/usbdrv.s
+	rm -f main.hex main.lst main.obj main.cof main.list main.map main.eep.hex main.bin main.asm *.o usbdrv/*.o main.s usbdrv/oddebug.s usbdrv/usbdrv.s
 
-# file targets:
+
+#
+# File targets
+#
+
+OBJECTS = usbdrv/usbdrv.o usbdrv/usbdrvasm.o usbdrv/oddebug.o main.o
+
+# Main binary
 main.bin:	$(OBJECTS)
 	$(COMPILE) -o main.bin $(OBJECTS)
 
+# Hex version of the binary
 main.hex:	main.bin
 	rm -f main.hex main.eep.hex
 	avr-objcopy -j .text -j .data -O ihex main.bin main.hex
-	./checksize main.bin 4096 256
-# do the checksize script as our last action to allow successful compilation
-# on Windows with WinAVR where the Unix commands will fail.
+	./checksize main.bin $(DEVICE_FLASH) $(DEVICE_RAM)
 
-disasm:	main.bin
-	avr-objdump -d main.bin
+# Disassembly
+main.asm:	main.bin
+	avr-objdump -d main.bin > main.asm
 
-cpp:
-	$(COMPILE) -E main.c
