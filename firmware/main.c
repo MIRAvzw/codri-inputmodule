@@ -43,12 +43,6 @@ PB0, PB2 = USB data lines
 static uchar    reportBuffer[2];    /* buffer for HID reports */
 static uchar    idleRate;           /* in 4 ms units */
 
-static uchar    adcPending;
-static uchar    isRecording;
-
-static uchar    valueBuffer[16];
-static uchar    *nextDigit;
-
 /* ------------------------------------------------------------------------- */
 
 PROGMEM char const usbHidReportDescriptor[USB_CFG_HID_REPORT_DESCRIPTOR_LENGTH] = { /* USB report descriptor */
@@ -105,91 +99,44 @@ PROGMEM char const usbHidReportDescriptor[USB_CFG_HID_REPORT_DESCRIPTOR_LENGTH] 
 #define KEY_0       39
 #define KEY_RETURN  40
 
+#define NUM_KEYS    7
+
+static const uchar  keyReport[NUM_KEYS + 1][2] PROGMEM = {
+/* none */  {0, 0},                     /* no key pressed */
+/*  1 */    {0, KEY_1},
+/*  2 */    {0, KEY_2},
+/*  3 */    {0, KEY_3},
+/*  4 */    {0, KEY_4},
+/*  5 */    {0, KEY_5},
+/*  6 */    {0, KEY_6},
+/*  7 */    {0, KEY_7},
+};
+
 /* ------------------------------------------------------------------------- */
 
-static void buildReport(void)
+static void buildReport(uchar key)
 {
-uchar   key = 0;
-
-    if(nextDigit != NULL){
-        key = *nextDigit;
-    }
-    reportBuffer[0] = 0;    /* no modifiers */
-    reportBuffer[1] = key;
-}
-
-static void evaluateADC(unsigned int value)
-{
-uchar   digit;
-
-    value += value + (value >> 1);  /* value = value * 2.5 for output in mV */
-    nextDigit = &valueBuffer[sizeof(valueBuffer)];
-    *--nextDigit = 0xff;/* terminate with 0xff */
-    *--nextDigit = 0;
-    *--nextDigit = KEY_RETURN;
-    do{
-        digit = value % 10;
-        value /= 10;
-        *--nextDigit = 0;
-        if(digit == 0){
-            *--nextDigit = KEY_0;
-        }else{
-            *--nextDigit = KEY_1 - 1 + digit;
-        }
-    }while(value != 0);
+/* This (not so elegant) cast saves us 10 bytes of program memory */
+    *(int *)reportBuffer = pgm_read_word(keyReport[key]);
 }
 
 /* ------------------------------------------------------------------------- */
 
-static void setIsRecording(uchar newValue)
-{
-    isRecording = newValue;
-    if(isRecording){
-        PORTB |= 1 << BIT_LED;      /* LED on */
-    }else{
-        PORTB &= ~(1 << BIT_LED);   /* LED off */
-    }
-}
-
 /* ------------------------------------------------------------------------- */
 
-static void keyPoll(void)
+static uchar keyPoll(void)
 {
-static uchar    keyMirror;
-uchar           key;
-
-    key = PINB & (1 << BIT_KEY);
-    if(keyMirror != key){   /* status changed */
-        keyMirror = key;
-        if(!key){           /* key was pressed */
-            setIsRecording(!isRecording);
-        }
-    }
-}
-
-static void adcPoll(void)
-{
-    if(adcPending && !(ADCSRA & (1 << ADSC))){
-        adcPending = 0;
-        evaluateADC(ADC);
-    }
-}
-
-static void timerPoll(void)
-{
-static uchar timerCnt;
-
-    if(TIFR & (1 << TOV1)){
-        TIFR = (1 << TOV1); /* clear overflow */
-        keyPoll();
-        if(++timerCnt >= 63){       /* ~ 1 second interval */
-            timerCnt = 0;
-            if(isRecording){
-                adcPending = 1;
-                ADCSRA |= (1 << ADSC);  /* start next conversion */
-            }
-        }
-    }
+uchar           x, key = 0;
+    
+    x = PINB;
+    if ((x & (1<<PB1)) == 0)
+        key += 1<<0;
+    if ((x & (1<<PB3)) == 0)
+        key += 1<<1;
+    if ((x & (1<<PB4)) == 0)
+        key += 1<<2;
+    
+    return key;
 }
 
 /* ------------------------------------------------------------------------- */
@@ -199,10 +146,10 @@ static void timerInit(void)
     TCCR1 = 0x0b;           /* select clock: 16.5M/1k -> overflow rate = 16.5M/256k = 62.94 Hz */
 }
 
-static void adcInit(void)
+static void keysInit(void)
 {
-    ADMUX = UTIL_BIN8(1001, 0011);  /* Vref=2.56V, measure ADC0 */
-    ADCSRA = UTIL_BIN8(1000, 0111); /* enable ADC, not free running, interrupt disable, rate = 1/128 */
+    PORTB = (1<<PB1)|(1<<PB3)|(1<<PB4); /* active necessary pull-ups*/
+    DDRB = (1<DDB0)|(1<<DDB2)|(1<DDB5); /* all pins input, except USB lines */
 }
 
 /* ------------------------------------------------------------------------- */
@@ -217,7 +164,7 @@ usbRequest_t    *rq = (void *)data;
     if((rq->bmRequestType & USBRQ_TYPE_MASK) == USBRQ_TYPE_CLASS){    /* class request type */
         if(rq->bRequest == USBRQ_HID_GET_REPORT){  /* wValue: ReportType (highbyte), ReportID (lowbyte) */
             /* we only have one report type, so don't look at wValue */
-            buildReport();
+            buildReport(keyPoll());
             return sizeof(reportBuffer);
         }else if(rq->bRequest == USBRQ_HID_GET_IDLE){
             usbMsgPtr = &idleRate;
@@ -300,6 +247,8 @@ int main(void)
 {
 uchar   i;
 uchar   calibrationValue;
+uchar   key, lastKey = 0, keyDidChange = 0;
+uchar   idleCounter = 0;
 
     calibrationValue = eeprom_read_byte(0); /* calibration value from last time */
     if(calibrationValue != 0xff){
@@ -311,24 +260,41 @@ uchar   calibrationValue;
         _delay_ms(15);
     }
     usbDeviceConnect();
-    DDRB |= 1 << BIT_LED;   /* output for LED */
-    PORTB |= 1 << BIT_KEY;  /* pull-up on key input */
     wdt_enable(WDTO_1S);
     timerInit();
-    adcInit();
+    keysInit();
     usbInit();
     sei();
     for(;;){    /* main event loop */
         wdt_reset();
         usbPoll();
-        if(usbInterruptIsReady() && nextDigit != NULL){ /* we can send another key */
-            buildReport();
-            usbSetInterrupt(reportBuffer, sizeof(reportBuffer));
-            if(*++nextDigit == 0xff)    /* this was terminator character */
-                nextDigit = NULL;
+        
+        key = keyPoll();
+        if(lastKey != key){
+            lastKey = key;
+            keyDidChange = 1;
         }
-        timerPoll();
-        adcPoll();
+        
+        if(TIFR & (1 << TOV1)){ /* 16 ms timer */
+            TIFR = (1 << TOV1); /* clear overflow */
+            keyPoll();
+            if(idleRate != 0){
+                if(idleCounter > 3){
+                    idleCounter -= 4;   /* 16 ms in units of 4 ms */
+                }else{
+                    idleCounter = idleRate;
+                    keyDidChange = 1;
+                }
+            }
+        }
+        
+        if(keyDidChange && usbInterruptIsReady()){
+            keyDidChange = 0;
+            /* use last key and not current key status in order to avoid lost
+               changes in key status. */
+            buildReport(lastKey);
+            usbSetInterrupt(reportBuffer, sizeof(reportBuffer));
+        }
     }
     return 0;
 }
