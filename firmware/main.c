@@ -10,7 +10,6 @@
 #include <avr/pgmspace.h>
 #include <util/delay.h>
 #include "usbdrv.h"
-#include "oddebug.h"
 
 // Utility macro's
 #define UTIL_BIN4(x)        (uchar)((0##x & 01000)/64 + (0##x & 0100)/16 + (0##x & 010)/4 + (0##x & 1))
@@ -33,7 +32,7 @@ static uchar    idleRate;           /* in 4 ms units */
 static void keysInit(void)
 {
     PORTB = (1<<PB1) | (1<<PB3) | (1<<PB4); /* active necessary pull-ups*/
-    DDRB = (1<DDB0) | (1<<DDB2) | (1<DDB5); /* all pins input, except USB lines */
+    //DDRB = (1<DDB0) | (1<<DDB2) | (1<DDB5); /* all pins input, except USB lines */
 }
 
 /* Keyboard usage values, see usb.org's HID-usage-tables document, chapter
@@ -59,18 +58,22 @@ static void keysInit(void)
 #define KEY_9       38
 #define KEY_0       39
 #define KEY_RETURN  40
+#define KEY_RIGHT   79
+#define KEY_LEFT    80
+#define KEY_DOWN    81
+#define KEY_UP      82
 
 #define NUM_KEYS    7
 
-static const uchar  keyReport[NUM_KEYS + 1][2] PROGMEM = {
+static const uchar keyReport[NUM_KEYS + 1][2] PROGMEM = {
 /* none */  {0, 0},                     /* no key pressed */
-/*  1 */    {0, KEY_1},
-/*  2 */    {0, KEY_2},
-/*  3 */    {0, KEY_3},
-/*  4 */    {0, KEY_4},
-/*  5 */    {0, KEY_5},
-/*  6 */    {0, KEY_6},
-/*  7 */    {0, KEY_7},
+/*  1 */    {MOD_SHIFT_RIGHT, KEY_1},
+/*  2 */    {MOD_SHIFT_RIGHT, KEY_2},
+/*  3 */    {MOD_SHIFT_RIGHT, KEY_3},
+/*  4 */    {MOD_SHIFT_RIGHT, KEY_4},
+/*  5 */    {MOD_SHIFT_RIGHT, KEY_5},
+/*  6 */    {MOD_SHIFT_RIGHT, KEY_6},
+/*  7 */    {MOD_SHIFT_RIGHT, KEY_7},
 };
 
 static uchar keyPoll(void)
@@ -81,9 +84,9 @@ static uchar keyPoll(void)
     x = PINB;
     if ((x & (1<<PB1)) == 0)
         key += 1<<0;
-    if ((x & (1<<PB3)) == 0)
+    if ((x & (1<<PB3)) == 0)        
         key += 1<<1;
-    if ((x & (1<<PB4)) == 0)
+    if ((x & (1<<PB4)) == 0)        
         key += 1<<2;
     
     return key;
@@ -254,7 +257,6 @@ int main(void)
     }
 
     // Connect the USB
-    odDebugInit();
     usbDeviceDisconnect();
     for (i=0;i<20;i++)  // 300 ms disconnect
     {
