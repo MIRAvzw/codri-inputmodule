@@ -9,7 +9,9 @@ Section=Sec_6
 
 [Sec_1]
 Name[en]="Top Copper"
+Name[nl]="Top Copper"
 Prompt[en]=""
+Prompt[nl]=""
 Device="GERBER_RS274X"
 Wheel=""
 Rack=""
@@ -27,7 +29,9 @@ Colors=" 1 2 1 2 1 2 1 2 1 2 1 2 1 2 1 2 6 6 4 8 8 8 8 8 8 8 8 8 8 8 8 8 4 4 1 1
 
 [Sec_2]
 Name[en]="Bottom Copper"
+Name[nl]="Bottom Copper"
 Prompt[en]=""
+Prompt[nl]=""
 Device="GERBER_RS274X"
 Wheel=".whl"
 Rack=""
@@ -45,7 +49,9 @@ Colors=" 1 2 1 2 1 2 1 2 1 2 1 2 1 2 1 2 6 6 4 8 8 8 8 8 8 8 8 8 8 8 8 8 4 4 1 1
 
 [Sec_3]
 Name[en]="Top Silkscreen"
+Name[nl]="Top Silkscreen"
 Prompt[en]=""
+Prompt[nl]=""
 Device="GERBER_RS274X"
 Wheel=".whl"
 Rack=""
@@ -63,7 +69,9 @@ Colors=" 1 2 1 2 1 2 1 2 1 2 1 2 1 2 1 2 6 6 4 8 8 8 8 8 8 8 8 8 8 8 8 8 4 4 1 1
 
 [Sec_4]
 Name[en]="Top Soldermask"
+Name[nl]="Top Soldermask"
 Prompt[en]=""
+Prompt[nl]=""
 Device="GERBER_RS274X"
 Wheel=".whl"
 Rack=""
@@ -81,7 +89,9 @@ Colors=" 1 2 1 2 1 2 1 2 1 2 1 2 1 2 1 2 6 6 4 8 8 8 8 8 8 8 8 8 8 8 8 8 4 4 1 1
 
 [Sec_5]
 Name[en]="Bottom Soldermask"
+Name[nl]="Bottom Soldermask"
 Prompt[en]=""
+Prompt[nl]=""
 Device="GERBER_RS274X"
 Wheel=".whl"
 Rack=""
@@ -99,7 +109,9 @@ Colors=" 1 2 1 2 1 2 1 2 1 2 1 2 1 2 1 2 6 6 4 8 8 8 8 8 8 8 8 8 8 8 8 8 4 4 1 1
 
 [Sec_6]
 Name[en]="Drill File"
+Name[nl]="Drill File"
 Prompt[en]=""
+Prompt[nl]=""
 Device="EXCELLON"
 Wheel=""
 Rack=""
