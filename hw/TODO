@@ -9,11 +9,15 @@ Errors
 
 * High-frequency decoupling capacitor spacing
 
+* Silkscreen labeling for switches (RESET should be 8)
+
 
 Ommissions
 ----------
 
 * License specification on silkscreen
+
+* Revision number on silkscreen
 
 
 Features
