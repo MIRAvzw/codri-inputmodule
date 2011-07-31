@@ -69,10 +69,10 @@ static const uchar keyReport[NUM_KEYS + 1][2] PROGMEM = {
 /* none */  {0, 0},                     /* no key pressed */
 /*  1 */    {MOD_SHIFT_RIGHT, KEY_1},
 /*  2 */    {MOD_SHIFT_RIGHT, KEY_2},
-/*  3 */    {MOD_SHIFT_RIGHT, KEY_3},
+/*  6 */    {MOD_SHIFT_RIGHT, KEY_6},
 /*  4 */    {MOD_SHIFT_RIGHT, KEY_4},
 /*  5 */    {MOD_SHIFT_RIGHT, KEY_5},
-/*  6 */    {MOD_SHIFT_RIGHT, KEY_6},
+/*  3 */    {MOD_SHIFT_RIGHT, KEY_3},
 /*  7 */    {MOD_SHIFT_RIGHT, KEY_7},
 };
 
