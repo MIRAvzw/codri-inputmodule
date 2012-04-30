@@ -1,0 +1,11 @@
+Hardware
+--------
+
+* fix the silk layer: pin numbering should be the other way around (pin 1 is now RST)
+
+* fix the port detection: diode logic is wrong, pins 5-7 all map to signal 7
+
+
+
+Firmware
+--------
