@@ -67,13 +67,13 @@ static void keysInit(void)
 
 static const uchar keyReport[NUM_KEYS + 1][2] PROGMEM = {
 /* none */  {0, 0},                     /* no key pressed */
-/*  1 */    {MOD_SHIFT_RIGHT, KEY_1},
-/*  2 */    {MOD_SHIFT_RIGHT, KEY_2},
-/*  6 */    {MOD_SHIFT_RIGHT, KEY_6},
-/*  4 */    {MOD_SHIFT_RIGHT, KEY_4},
-/*  5 */    {MOD_SHIFT_RIGHT, KEY_5},
-/*  3 */    {MOD_SHIFT_RIGHT, KEY_3},
-/*  7 */    {MOD_SHIFT_RIGHT, KEY_7},
+/*  1 */    {0, KEY_LEFT},
+/*  2 */    {0, KEY_RIGHT},
+/*  6 */    {0, 0},             // broken
+/*  4 */    {0, KEY_DOWN},
+/*  5 */    {0, 0},             // broken
+/*  3 */    {0, KEY_UP},
+/*  7 */    {0, KEY_RETURN},
 };
 
 static uchar keyPoll(void)
